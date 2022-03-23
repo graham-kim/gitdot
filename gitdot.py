@@ -6,6 +6,7 @@ import sys
 from collections import namedtuple
 from git import Repo
 import re
+import github as gh
 
 merge_pr_regex = re.compile(r"Merge pull request #(\d+) from \S+/(\S+)")
 merge_local_branch_regex = re.compile(r"Merge branch '(\S+)' into (\S+)")
@@ -17,11 +18,15 @@ class MergeInfo:
         self.dst: str = None
         self.summary: str = None
 
-def parse_merge_message(summary: str) -> MergeInfo:
+def parse_merge_message(summary: str, github_repo: gh.Repository.Repository = None) -> MergeInfo:
     info = MergeInfo()
     m = merge_pr_regex.match(summary)
     if m:
         info.src = f'PR #{m.group(1)} {m.group(2)}'
+        if github_repo is not None:
+            sys.stderr.write(f"Looking up PR #{m.group(1)}\n")
+            sys.stderr.flush()
+            info.dst = github_repo.get_pull(int(m.group(1))).base.ref
         return info
 
     m = merge_local_branch_regex.match(summary)
@@ -41,10 +46,11 @@ def describe_commit_in_dot(commit_hash: str, fillcolor: str = "yellow") -> str:
         line += ' [fillcolor="yellow"]'
     return line
 
-def describe_merge_commit_in_dot(repo: Repo, commit_hash: str, fillcolor: str = "yellow") -> str:
+def describe_merge_commit_in_dot(repo: Repo, commit_hash: str, fillcolor: str = "yellow", \
+                                 github_repo: gh.Repository.Repository = None) -> str:
     commit = repo.commit(commit_hash)
     line = describe_commit_in_dot(commit_hash, fillcolor)
-    info = parse_merge_message(commit.summary)
+    info = parse_merge_message(str(commit.summary), github_repo)
 
     line = line.strip(']') + f', label="{commit_hash}\\n'
     if info.summary is not None:
@@ -91,7 +97,7 @@ class ParseResults:
         self.multi_parent_dot_lines: tp.List[str] = []
         self.multi_parent_nodes: tp.List[str] = []
 
-def parse_stdin(repo: Repo) -> ParseResults:
+def parse_stdin(repo: Repo, github_repo: gh.Repository.Repository = None) -> ParseResults:
     results = ParseResults()
     for line in sys.stdin:
         if "->" not in line:
@@ -108,7 +114,7 @@ def parse_stdin(repo: Repo) -> ParseResults:
         parents = lhs.strip().split(' ')
         child = rhs.strip()
         if len(parents) > 1:
-            results.multi_parent_nodes.append( describe_merge_commit_in_dot(repo, child) )
+            results.multi_parent_nodes.append( describe_merge_commit_in_dot(repo, child, github_repo=github_repo) )
             for p in parents:
                 results.multi_parent_dot_lines.append( translate_to_dot(p, child) )
         else:
@@ -120,11 +126,23 @@ def parse_stdin(repo: Repo) -> ParseResults:
     condense_OPCs(results.one_parent_commits)
     return results
 
-def print_dot(repo: Repo):
+def connect_to_repo(access_token_env_var: str, repo_name_env_var: str) -> gh.Repository.Repository:
+    access_token = os.environ[access_token_env_var]
+    if not access_token:
+        raise Exception(f"Must provide an access token in the environment variable {access_token_env_var}")
+
+    repo_name = os.environ[repo_name_env_var]
+    if not repo_name:
+        raise Exception(f"Must provide a GitHub repo name in the environment variable {repo_name_env_var}")
+
+    g = gh.Github(access_token)
+    return g.get_repo(repo_name)
+
+def print_dot(repo: Repo, github_repo: gh.Repository.Repository = None):
     print("digraph {")
     print("    rankdir=TD")
     print('    node [shape="box", style="filled", fillcolor="white"]\n')
-    results = parse_stdin(repo)
+    results = parse_stdin(repo, github_repo)
     for line in results.multi_parent_nodes:
         print(line)
     print("")
@@ -137,4 +155,4 @@ def print_dot(repo: Repo):
     print("}")
 
 if __name__ == '__main__':
-    print_dot(Repo(os.getcwd()))
+    print_dot(Repo(os.getcwd()), connect_to_repo("GITHUB_ACCESS_TOKEN", "GITHUB_REPO_NAME"))
