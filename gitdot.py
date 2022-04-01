@@ -7,10 +7,21 @@ from collections import namedtuple
 from git import Repo
 import re
 import github as gh
+import json
+from pathlib import Path
 
 merge_pr_regex = re.compile(r"Merge pull request #(\d+) from \S+/(\S+)")
 merge_local_branch_regex = re.compile(r"Merge branch '(\S+)' into (\S+)")
 merge_remote_branch_regex = re.compile(r"Merge remote-tracking branch 'origin/(\S+)' into (\S+)")
+
+cfg_filename = Path(__file__).resolve().parent / "branch_colours.json"
+if os.path.isfile(cfg_filename):
+    with open(cfg_filename, 'r') as inF:
+        col_cfg = json.load(inF)
+else:
+    col_cfg = {
+        "main": "red"
+    }
 
 class MergeInfo:
     def __init__(self):
@@ -43,15 +54,20 @@ def parse_merge_message(summary: str, github_repo: gh.Repository.Repository = No
 def describe_commit_in_dot(commit_hash: str, fillcolor: str = "yellow") -> str:
     line = f'    _{commit_hash}'
     if fillcolor:
-        line += ' [fillcolor="yellow"]'
+        line += f' [fillcolor="{fillcolor}"]'
     return line
 
-def describe_merge_commit_in_dot(repo: Repo, commit_hash: str, fillcolor: str = "yellow", \
+def describe_merge_commit_in_dot(repo: Repo, commit_hash: str, fillcolor: str = None, \
                                  github_repo: gh.Repository.Repository = None) -> str:
     commit = repo.commit(commit_hash)
-    line = describe_commit_in_dot(commit_hash, fillcolor)
     info = parse_merge_message(str(commit.summary), github_repo)
 
+    if fillcolor is None:
+        fillcolor = "yellow"
+        if info.dst in col_cfg:
+            fillcolor = col_cfg[info.dst]
+
+    line = describe_commit_in_dot(commit_hash, fillcolor)
     line = line.strip(']') + f', label="{commit_hash}\\n'
     if info.summary is not None:
         line += info.summary
