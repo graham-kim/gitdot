@@ -1,0 +1,4 @@
+{
+    "access_token_env_var": "some/var",
+    "repo_name": "some/repo"
+}
