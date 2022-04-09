@@ -172,7 +172,7 @@ def print_dot(repo: Repo, pr_secr: PrSecretary):
     print("}")
 
 if __name__ == '__main__':
-    with open('config.json', 'r') as inF:
+    with open(Path(__file__).resolve().parent / 'config.json', 'r') as inF:
         cfg = json.load(inF)
     pr_secr = PrSecretary(connect_to_repo(cfg["access_token_env_var"], cfg["repo_name"]))
     print_dot(Repo(os.getcwd()), pr_secr)
