@@ -30,8 +30,6 @@ class MergeInfo:
         self.dst: str = None
         self.summary: str = None
 
-
-
 def parse_merge_message(summary: str, pr_secr: PrSecretary) -> MergeInfo:
     info = MergeInfo()
     m = merge_pr_regex.match(summary)
@@ -177,3 +175,4 @@ def print_dot(repo: Repo, pr_secr: PrSecretary):
 if __name__ == '__main__':
     pr_secr = PrSecretary(connect_to_repo("GITHUB_ACCESS_TOKEN", "GITHUB_REPO_NAME"))
     print_dot(Repo(os.getcwd()), pr_secr)
+    pr_secr.save_cache()
