@@ -69,15 +69,15 @@ class DotTranslator:
         print("digraph {")
         print("    rankdir=TD")
         print('    node [shape="box", style="filled", fillcolor="white"]\n')
-        for node in self.graph_ana.multi_parent_nodes:
-            line = self.describe_merge_commit_in_dot(node)
+        for node in self.graph_ana.graph.nodes:
+            if self.graph_ana.is_merge_commit(node):
+                line = self.describe_merge_commit_in_dot(node)
+            else:
+                line = describe_commit_in_dot(node, "white")
             print(line)
         print("")
-        for item in self.graph_ana.merge_links:
-            line = describe_link_in_dot(item.parent_hash, item.commit_hash)
+        for src_dst in self.graph_ana.graph.edges:
+            do_highlight = self.graph_ana.is_squashed_link(src_dst)
+            line = describe_link_in_dot(src_dst[0], src_dst[1], do_highlight)
             print(line)
-        print("")
-        for opc in self.graph_ana.one_parent_commits.values():
-            for line in [describe_link_in_dot(opc.hash, child_hash, True) for child_hash in opc.child]:
-                print(line)
         print("}")
