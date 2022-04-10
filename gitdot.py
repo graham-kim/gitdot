@@ -6,7 +6,6 @@ import sys
 from collections import namedtuple
 from git import Repo
 import re
-import github as gh
 import json
 from pathlib import Path
 from pr_secretary import PrSecretary
@@ -144,17 +143,6 @@ def parse_stdin(repo: Repo, pr_secr: PrSecretary) -> ParseResults:
     condense_OPCs(results.one_parent_commits)
     return results
 
-def connect_to_repo(access_token_env_var: str, repo_name: str) -> gh.Repository.Repository:
-    access_token = os.environ[access_token_env_var]
-    if not access_token:
-        raise Exception(f"Must provide an access token in the environment variable {access_token_env_var}")
-
-    if not repo_name:
-        raise Exception(f"Must provide a GitHub repo name in the environment variable {repo_name_env_var}")
-
-    g = gh.Github(access_token)
-    return g.get_repo(repo_name)
-
 def print_dot(repo: Repo, pr_secr: PrSecretary):
     print("digraph {")
     print("    rankdir=TD")
@@ -174,6 +162,6 @@ def print_dot(repo: Repo, pr_secr: PrSecretary):
 if __name__ == '__main__':
     with open(Path(__file__).resolve().parent / 'config.json', 'r') as inF:
         cfg = json.load(inF)
-    pr_secr = PrSecretary(connect_to_repo(cfg["access_token_env_var"], cfg["repo_name"]))
+    pr_secr = PrSecretary(cfg["access_token_env_var"], cfg["repo_name"])
     print_dot(Repo(os.getcwd()), pr_secr)
     pr_secr.save_cache()

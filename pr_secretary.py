@@ -5,10 +5,18 @@ import os
 from pathlib import Path
 
 class PrSecretary:
-    def __init__(self, github_repo: gh.Repository.Repository = None):
-        self.github_repo: gh.Repository.Repository = github_repo
+    def __init__(self, access_token_env_var: str, repo_name: str):
+        self._connect_to_repo(access_token_env_var, repo_name)
         self.pr_num_dst_cache: tp.Dict[int, str] = {}
         self._load_cache()
+
+    def _connect_to_repo(self, access_token_env_var: str, repo_name: str) -> None:
+        access_token = os.environ[access_token_env_var]
+        if not access_token:
+            raise Exception(f"Must provide an access token in the environment variable {access_token_env_var}")
+
+        g = gh.Github(access_token)
+        self.github_repo = g.get_repo(repo_name)
 
     def _get_savefile_name(self) -> Path:
         filename = self.github_repo.name + ".pik"
