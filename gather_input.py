@@ -62,6 +62,8 @@ class CommitRangeSecretary:
         all_commit_ranges_seen_before = True
         for line in sys.stdin:
             commit_range = line.strip()
+            if not commit_range:
+                continue
             commit_ranges_seen.append(commit_range)
 
             if all_commit_ranges_seen_before:
@@ -97,5 +99,6 @@ class CommitRangeSecretary:
 if __name__ == '__main__':
     se = CommitRangeSecretary()
     for line in se.parse_stdin():
-        print(line)
+        if line.strip():
+            print(line)
     
