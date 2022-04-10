@@ -4,6 +4,8 @@ import typing as tp
 import os
 from pathlib import Path
 
+from utils import printerr
+
 class PrSecretary:
     def __init__(self, access_token_env_var: str, repo_name: str):
         self._connect_to_repo(access_token_env_var, repo_name)
@@ -40,5 +42,6 @@ class PrSecretary:
 
     def lookup_dst_branch_name(self, pr_num: int) -> str:
         if pr_num not in self.pr_num_dst_cache:
+            printerr(f"PR #{pr_num} not cached, querying GitHub")
             self.pr_num_dst_cache[pr_num] = self.github_repo.get_pull(pr_num).base.ref
         return self.pr_num_dst_cache[pr_num]
