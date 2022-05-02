@@ -3,8 +3,8 @@ import os
 import re
 from git import Repo
 
-from pr_secretary import PrSecretary
-from utils import printerr
+from .pr_secretary import PrSecretary
+from utils.printerr import printerr
 
 merge_pr_regex = re.compile(r"Merge pull request #(\d+) from \S+/(\S+)")
 merge_local_branch_regex = re.compile(r"Merge branch '(\S+)' into (\S+)")

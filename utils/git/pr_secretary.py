@@ -4,7 +4,7 @@ import typing as tp
 import os
 from pathlib import Path
 
-from utils import printerr
+from utils.printerr import printerr
 
 class PrSecretary:
     def __init__(self, access_token_env_var: str, repo_name: str):

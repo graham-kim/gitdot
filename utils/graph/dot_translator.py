@@ -5,9 +5,9 @@ import os
 import sys
 import json
 
-from pr_secretary import PrSecretary
-from graph_analyser import ParsedLine, GraphAnalyser
-from merge_commit_informant import MergeInfo, MergeInformant
+from utils.git.pr_secretary import PrSecretary
+from .graph_analyser import ParsedLine, GraphAnalyser
+from utils.git.merge_commit_informant import MergeInfo, MergeInformant
 from pathlib import Path
 
 def describe_commit_in_dot(commit_hash: str, fillcolor: str = "yellow") -> str:

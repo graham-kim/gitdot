@@ -4,8 +4,8 @@ import typing as tp
 import json
 from pathlib import Path
 
-from pr_secretary import PrSecretary
-from dot_translator import DotTranslator
+from utils.git.pr_secretary import PrSecretary
+from utils.graph.dot_translator import DotTranslator
 
 if __name__ == '__main__':
     with open(Path(__file__).resolve().parent / 'config.json', 'r') as inF:
